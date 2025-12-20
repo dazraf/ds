@@ -744,10 +744,28 @@ Prevent OWASP Top 10:
   - Easy to update and maintain
 
 ### API Documentation
-- [Specify format: OpenAPI/Swagger, etc.]
-- Document all endpoints
-- Include request/response examples
-- Document error responses
+
+**Format**: OpenAPI 3.0 specification
+
+**Required Endpoints**:
+- **`/openapi.json`**: OpenAPI specification in JSON format
+- **`/swagger`**: Swagger UI for interactive API exploration and testing
+
+**Documentation Requirements**:
+- Document all endpoints with OpenAPI annotations
+- Include request/response schemas with examples
+- Document all error responses (4xx, 5xx) with error codes
+- Specify authentication/authorization requirements per endpoint
+- Include descriptions for all path parameters, query parameters, and request bodies
+- Use meaningful operation IDs for each endpoint
+- Group related endpoints with tags
+
+**Best Practices**:
+- Keep OpenAPI spec synchronized with actual implementation
+- Use code-first approach with annotations (e.g., `@OpenAPIDefinition`, `@Operation`)
+- Generate OpenAPI spec automatically from code when possible
+- Test API documentation regularly to ensure accuracy
+- Include usage examples in endpoint descriptions
 
 ---
 

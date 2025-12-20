@@ -48,6 +48,12 @@ This document describes the service architecture, design patterns, and technolog
 - **Test Framework**: JUnit 5
 - **Assertions**: AssertJ (fluent assertion library)
 
+### API Documentation
+
+- **Specification**: OpenAPI 3.0
+- **Interactive UI**: Swagger UI
+- **Endpoints**: `/openapi.json` (spec), `/swagger` (UI)
+
 ### Local Development Stack
 
 For local development, the complete stack includes:
@@ -74,6 +80,26 @@ graph LR
     OTel -->|Export| Jaeger[Jaeger Backend]
     Vertx -->|Logs| Logback[Logback Logger]
 ```
+
+### API Endpoints
+
+The service exposes the following standard endpoints:
+
+**Documentation Endpoints**:
+- **`GET /openapi.json`**: OpenAPI 3.0 specification in JSON format
+  - Machine-readable API specification
+  - Used by tools and clients for code generation
+  - Auto-generated from code annotations
+
+- **`GET /swagger`**: Swagger UI interface
+  - Interactive API documentation
+  - Allows testing endpoints directly from the browser
+  - Provides request/response examples
+
+**Application Endpoints**:
+- API endpoints are documented in the OpenAPI specification
+- All business endpoints follow RESTful conventions
+- Endpoints are versioned (e.g., `/api/v1/...`)
 
 ### Service Boundaries
 
