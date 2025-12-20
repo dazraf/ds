@@ -41,18 +41,27 @@ This document outlines coding standards, conventions, and best practices for thi
 - **Formatter**: Kotlin official style guide with ktlint
 - **Indentation**: 4 spaces (no tabs)
 - **Line length**: 120 characters maximum
-- **Imports**: No wildcard imports (except for testing DSLs)
 
 ### File Organization
 - One class per file (unless tightly coupled sealed classes/data classes)
 - File name should match the main class name
 - Group related functionality together
 - Keep files under 300-400 lines when possible
-- Organize imports:
+
+### Import Management
+- **NO wildcard imports, ever**: Always use explicit imports
+  - ❌ BAD: `import io.vertx.core.*`
+  - ✅ GOOD: `import io.vertx.core.Vertx`
+  - ❌ BAD: `import org.assertj.core.api.Assertions.*`
+  - ✅ GOOD: `import org.assertj.core.api.Assertions.assertThat`
+- Organize imports in this order:
   1. Standard library (`kotlin.*`, `java.*`)
   2. Third-party libraries
   3. Project imports
-- Remove unused imports
+- Remove unused imports immediately
+- Configure your IDE to prevent wildcard imports:
+  - IntelliJ: Settings → Editor → Code Style → Kotlin → Imports
+  - Set "Use single name import" for all import types
 
 ### Comments
 - Write comments that explain "why", not "what"
