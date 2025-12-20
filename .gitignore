@@ -1,0 +1,65 @@
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Editor and IDE Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-*
+
+# Temporary Files
+*.tmp
+*.temp
+*.log
+*.bak
+*.cache
+
+# Build Artifacts
+dist/
+build/
+out/
+target/
+*.pyc
+__pycache__/
+*.pyo
+*.so
+*.dll
+*.dylib
+
+# Dependency Directories
+node_modules/
+vendor/
+.npm/
+.yarn/
+
+# Environment Files
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# Coverage and Test Reports
+coverage/
+.coverage
+*.cover
+.pytest_cache/
+.tox/
+htmlcov/
+
+# Package Files
+*.egg-info/
+*.egg
+.eggs/
