@@ -30,6 +30,7 @@ Desktop.ini
 dist/
 build/
 out/
+bin/
 target/
 *.pyc
 __pycache__/
@@ -37,6 +38,21 @@ __pycache__/
 *.so
 *.dll
 *.dylib
+
+# Gradle
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Kotlin
+.kotlintest/
+*.hprof
+
+# JVM
+hs_err_pid*
+replay_pid*
+
+# Logs
+logs/
 
 # Dependency Directories
 node_modules/
@@ -58,6 +74,8 @@ coverage/
 .pytest_cache/
 .tox/
 htmlcov/
+*.exec
+.jacoco/
 
 # Package Files
 *.egg-info/
