@@ -36,6 +36,7 @@ dependencies {
     implementation("io.opentelemetry:opentelemetry-api:1.32.0")
     implementation("io.opentelemetry:opentelemetry-sdk:1.32.0")
     implementation("io.opentelemetry:opentelemetry-exporter-otlp:1.32.0")
+    implementation("io.opentelemetry.semconv:opentelemetry-semconv:1.21.0-alpha")
 
     // Kotlin
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -67,7 +68,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("io.vertx.core.Launcher")
+    mainClass.set("com.example.service.MainKt")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
@@ -94,11 +95,7 @@ tasks.jacocoTestReport {
 }
 
 tasks.withType<JavaExec> {
-    args = listOf(
-        "run",
-        "com.example.service.MainVerticle",
-        "--launcher-class=${application.mainClass.get()}"
-    )
+    // No args needed - using our custom main class
 }
 
 java {

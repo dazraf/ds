@@ -4,6 +4,7 @@ import com.example.service.handlers.HealthHandler
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Promise
 import io.vertx.core.http.HttpServerOptions
+import io.vertx.core.tracing.TracingPolicy
 import io.vertx.ext.web.Router
 import mu.KotlinLogging
 
@@ -19,6 +20,7 @@ class MainVerticle : AbstractVerticle() {
         val serverOptions = HttpServerOptions()
             .setPort(port)
             .setHost(host)
+            .setTracingPolicy(TracingPolicy.ALWAYS)
 
         vertx.createHttpServer(serverOptions)
             .requestHandler(router)
