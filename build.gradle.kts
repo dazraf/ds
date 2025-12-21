@@ -17,6 +17,7 @@ val junitVersion = "5.10.1"
 val assertjVersion = "3.25.1"
 val mockkVersion = "1.13.9"
 val testcontainersVersion = "1.19.3"
+val swaggerVersion = "2.2.20"
 
 dependencies {
     // Vert.x core
@@ -49,6 +50,10 @@ dependencies {
     // JSON
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.1")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.16.1")
+
+    // Swagger Core (OpenAPI)
+    implementation("io.swagger.core.v3:swagger-core-jakarta:$swaggerVersion")
+    implementation("io.swagger.core.v3:swagger-models-jakarta:$swaggerVersion")
 
     // Testing
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")

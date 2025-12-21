@@ -1,6 +1,8 @@
 package com.example.service
 
 import com.example.service.handlers.HealthHandler
+import com.example.service.handlers.OpenApiHandler
+import com.example.service.handlers.SwaggerUiHandler
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Promise
 import io.vertx.core.http.HttpServerOptions
@@ -42,7 +44,14 @@ class MainVerticle : AbstractVerticle() {
         val healthHandler = HealthHandler()
         router.get("/api/health").handler(healthHandler::handle)
 
-        logger.info { "Registered routes: GET /api/health" }
+        // OpenAPI documentation endpoints
+        val openApiHandler = OpenApiHandler()
+        router.get("/openapi.json").handler(openApiHandler::handle)
+
+        val swaggerUiHandler = SwaggerUiHandler()
+        router.get("/swagger").handler(swaggerUiHandler::handle)
+
+        logger.info { "Registered routes: GET /api/health, GET /openapi.json, GET /swagger" }
 
         return router
     }
