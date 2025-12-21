@@ -26,45 +26,64 @@ See [docs/BEST_PRACTICES.md](docs/BEST_PRACTICES.md) for:
 
 ## Quick Start
 
-### 1. Start Infrastructure
-
-Start PostgreSQL, OpenTelemetry Collector, and Jaeger:
+### Start the Complete Local Stack
 
 ```bash
+# 1. Start infrastructure (PostgreSQL, OTel Collector, Jaeger)
 docker-compose up -d
-```
 
-This starts:
-- PostgreSQL on port 5432
-- OTel Collector on port 4317 (OTLP gRPC)
-- Jaeger UI on port 16686 (http://localhost:16686)
-
-### 2. Run the Application
-
-```bash
+# 2. Run the application
 ./gradlew run
 ```
 
-The service will start on port 8080.
-
-### 3. Test the Health Endpoint
+### Verify the Stack
 
 ```bash
+# Test the health endpoint
 curl http://localhost:8080/api/health
+
+# Expected response: {"status":"OK"}
 ```
 
-Expected response:
-```json
-{
-  "status": "OK"
-}
+## Service URLs
+
+Once the stack is running, access the following services:
+
+### Application Endpoints
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| **API Base** | http://localhost:8080 | Main application server |
+| **Health Check** | http://localhost:8080/api/health | Service health status |
+| **Swagger UI** | http://localhost:8080/swagger | Interactive API documentation |
+| **OpenAPI Spec** | http://localhost:8080/openapi.json | OpenAPI 3.0 specification (JSON) |
+
+### Infrastructure Services
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| **PostgreSQL** | `localhost:5432` | Database (user: `postgres`, password: `postgres`, database: `appdb`) |
+| **Jaeger UI** | http://localhost:16686 | Distributed tracing visualization |
+| **OTel Collector** | `localhost:4317` | OpenTelemetry OTLP gRPC endpoint |
+
+### Development Tools
+
+| Tool | Location | Description |
+|------|----------|-------------|
+| **JaCoCo Coverage Report** | `build/reports/jacoco/test/html/index.html` | Test coverage report (after running `./gradlew test jacocoTestReport`) |
+| **Test Reports** | `build/reports/tests/test/index.html` | Test execution report (after running `./gradlew test`) |
+
+### Stopping the Stack
+
+```bash
+# Stop the application (Ctrl+C)
+
+# Stop infrastructure services
+docker-compose down
+
+# Stop and remove all data (including database)
+docker-compose down -v
 ```
-
-## API Documentation
-
-Once the service is running, access:
-- **Swagger UI**: http://localhost:8080/swagger (coming soon)
-- **OpenAPI Spec**: http://localhost:8080/openapi.json (coming soon)
 
 ## Development
 
