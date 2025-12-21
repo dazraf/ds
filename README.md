@@ -121,27 +121,42 @@ This project follows strict Kotlin coding standards:
 
 ```
 .
-├── build.gradle.kts              # Gradle build configuration
-├── docker-compose.yml             # Local development stack
-├── otel-collector-config.yaml    # OpenTelemetry configuration
+├── build.gradle.kts                    # Gradle build configuration
+├── docker-compose.yml                  # Local development stack
+├── otel-collector-config.yaml          # OpenTelemetry configuration
 ├── src/
 │   ├── main/
 │   │   ├── kotlin/
 │   │   │   └── com/example/service/
-│   │   │       ├── MainVerticle.kt       # Main application verticle
-│   │   │       └── handlers/
-│   │   │           └── HealthHandler.kt  # Health check handler
+│   │   │       ├── Main.kt                        # Application entry point
+│   │   │       ├── MainVerticle.kt                # Main application verticle
+│   │   │       ├── config/
+│   │   │       │   └── OpenTelemetryConfig.kt     # OTel setup
+│   │   │       ├── handlers/
+│   │   │       │   ├── HealthHandler.kt           # Health check handler
+│   │   │       │   ├── OpenApiHandler.kt          # OpenAPI spec endpoint
+│   │   │       │   └── SwaggerUiHandler.kt        # Swagger UI endpoint
+│   │   │       ├── models/
+│   │   │       │   └── HealthStatus.kt            # Data models
+│   │   │       └── openapi/
+│   │   │           ├── ApiSpecification.kt        # OpenAPI spec definition
+│   │   │           ├── OpenApiGenerator.kt        # JSON generator
+│   │   │           └── dsl/
+│   │   │               └── OpenApiDsl.kt          # Kotlin DSL for OpenAPI
 │   │   └── resources/
-│   │       ├── logback.xml               # Logging configuration
-│   │       └── application.conf          # Application configuration
+│   │       ├── logback.xml                        # Logging configuration
+│   │       └── application.conf                   # Application configuration
 │   └── test/
 │       └── kotlin/
 │           └── com/example/service/
-│               ├── unit/                  # Unit tests
-│               └── integration/           # Integration tests
+│               ├── unit/
+│               │   ├── handlers/                  # Handler unit tests
+│               │   └── openapi/                   # OpenAPI DSL tests
+│               └── integration/
+│                   └── api/                       # API integration tests
 └── docs/
-    ├── ARCHITECTURE.md            # Architecture documentation
-    └── BEST_PRACTICES.md          # Coding standards
+    ├── ARCHITECTURE.md                # Architecture documentation
+    └── BEST_PRACTICES.md              # Coding standards
 ```
 
 ## Observability

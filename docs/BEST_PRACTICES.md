@@ -751,8 +751,15 @@ Prevent OWASP Top 10:
 - **`/openapi.json`**: OpenAPI specification in JSON format
 - **`/swagger`**: Swagger UI for interactive API exploration and testing
 
+**Documentation Approach**:
+This project uses a **Kotlin DSL** for defining OpenAPI specifications:
+- Centralized API definitions in `src/main/kotlin/com/example/service/openapi/ApiSpecification.kt`
+- Type-safe DSL wrapping Swagger Core models
+- Automatic schema generation from Kotlin data classes using Swagger Core's `ModelConverters`
+- Schemas registered as reusable components with `$ref` references
+
 **Documentation Requirements**:
-- Document all endpoints with OpenAPI annotations
+- Document all endpoints in the `ApiSpecification.kt` file using the DSL
 - Include request/response schemas with examples
 - Document all error responses (4xx, 5xx) with error codes
 - Specify authentication/authorization requirements per endpoint
@@ -760,10 +767,29 @@ Prevent OWASP Top 10:
 - Use meaningful operation IDs for each endpoint
 - Group related endpoints with tags
 
+**DSL Example**:
+```kotlin
+path("/api/resource") {
+    get {
+        operationId = "getResource"
+        summary = "Get resource"
+        tag("Resources")
+
+        response("200") {
+            description = "Success"
+            jsonContent<ResourceModel>(
+                example = ResourceModel(id = "123")
+            )
+        }
+    }
+}
+```
+
 **Best Practices**:
 - Keep OpenAPI spec synchronized with actual implementation
-- Use code-first approach with annotations (e.g., `@OpenAPIDefinition`, `@Operation`)
-- Generate OpenAPI spec automatically from code when possible
+- Define all API specifications in `ApiSpecification.kt`
+- Leverage Swagger Core's automatic schema generation from Kotlin data classes
+- Use `$ref` for schema references instead of inline definitions
 - Test API documentation regularly to ensure accuracy
 - Include usage examples in endpoint descriptions
 

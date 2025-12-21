@@ -1,6 +1,6 @@
 # Architecture & Stack
 
-**Last Updated:** 2025-12-20
+**Last Updated:** 2025-12-21
 
 This document describes the service architecture, design patterns, and technology stack for this project. Update this document as the architecture evolves.
 
@@ -89,7 +89,7 @@ The service exposes the following standard endpoints:
 - **`GET /openapi.json`**: OpenAPI 3.0 specification in JSON format
   - Machine-readable API specification
   - Used by tools and clients for code generation
-  - Auto-generated from code annotations
+  - Generated from Kotlin DSL using Swagger Core
 
 - **`GET /swagger`**: Swagger UI interface
   - Interactive API documentation
@@ -134,6 +134,8 @@ The service exposes the following standard endpoints:
         /services      # Business logic layer
         /repositories  # Data access layer
         /models        # Domain models and data classes
+        /openapi       # OpenAPI specification (Kotlin DSL)
+          /dsl         # OpenAPI DSL builders
         /config        # Configuration classes
         /extensions    # Kotlin extension functions
         /utils         # Shared utilities
@@ -143,7 +145,8 @@ The service exposes the following standard endpoints:
   /test
     /kotlin
       /[package]
-        /[mirrors main structure]
+        /unit          # Unit tests
+        /integration   # Integration tests
     /resources
       /test-config     # Test configurations
 /build.gradle.kts      # Gradle build configuration
