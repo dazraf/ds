@@ -15,6 +15,15 @@ Before starting any work, familiarize yourself with:
 ### Development Standards & Best Practices
 @docs/BEST_PRACTICES.md
 
+### Outstanding Tasks & Technical Debt
+@TODO.md
+
+**IMPORTANT:** Always check and update TODO.md when:
+- Completing any task listed in it
+- Discovering new compliance violations
+- Adding new features (ensure tests and docs are added to TODO if not complete)
+- During code reviews
+
 ## Quick Reference
 
 ### Start the Complete Stack
