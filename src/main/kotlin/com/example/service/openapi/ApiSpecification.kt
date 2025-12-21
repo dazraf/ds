@@ -38,6 +38,34 @@ object ApiSpecification {
                 }
             }
         }
+
+        path("/openapi.json") {
+            get {
+                operationId = "getOpenApiSpec"
+                summary = "Get OpenAPI specification"
+                description = "Returns the complete OpenAPI 3.0 specification for this API in JSON format. " +
+                        "This specification is generated at runtime from the Kotlin DSL definition."
+                tag("Documentation")
+
+                response("200") {
+                    description = "OpenAPI 3.0 specification in JSON format"
+                }
+            }
+        }
+
+        path("/swagger") {
+            get {
+                operationId = "getSwaggerUI"
+                summary = "Swagger UI interface"
+                description = "Interactive API documentation and testing interface powered by Swagger UI. " +
+                        "Allows you to explore and test all API endpoints directly from your browser."
+                tag("Documentation")
+
+                response("200") {
+                    description = "Swagger UI HTML page"
+                }
+            }
+        }
     }
 
     /**
