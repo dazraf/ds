@@ -12,6 +12,13 @@ import mu.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
 
+/**
+ * Configuration for OpenTelemetry distributed tracing.
+ *
+ * Initializes the OpenTelemetry SDK with OTLP exporter for Jaeger.
+ * Configures the tracer provider with batch span processor and
+ * service resource attributes.
+ */
 object OpenTelemetryConfig {
 
     fun initialize(serviceName: String, otlpEndpoint: String): OpenTelemetry {

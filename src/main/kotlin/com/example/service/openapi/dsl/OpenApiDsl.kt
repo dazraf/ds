@@ -25,10 +25,16 @@ class OpenApiBuilder {
         openApi.openapi = "3.0.3"
     }
 
+    /**
+     * Configure API info section (title, version, description).
+     */
     fun info(block: InfoBuilder.() -> Unit) {
         openApi.info = InfoBuilder().apply(block).build()
     }
 
+    /**
+     * Define an API path with its operations (GET, POST, etc.).
+     */
     fun path(path: String, block: PathBuilder.() -> Unit) {
         val pathItem = PathBuilder(this).apply(block).build()
         openApi.path(path, pathItem)
@@ -81,22 +87,37 @@ class InfoBuilder {
 class PathBuilder(private val apiBuilder: OpenApiBuilder) {
     private val pathItem = PathItem()
 
+    /**
+     * Define a GET operation for this path.
+     */
     fun get(block: OperationBuilder.() -> Unit) {
         pathItem.get = OperationBuilder(apiBuilder).apply(block).build()
     }
 
+    /**
+     * Define a POST operation for this path.
+     */
     fun post(block: OperationBuilder.() -> Unit) {
         pathItem.post = OperationBuilder(apiBuilder).apply(block).build()
     }
 
+    /**
+     * Define a PUT operation for this path.
+     */
     fun put(block: OperationBuilder.() -> Unit) {
         pathItem.put = OperationBuilder(apiBuilder).apply(block).build()
     }
 
+    /**
+     * Define a DELETE operation for this path.
+     */
     fun delete(block: OperationBuilder.() -> Unit) {
         pathItem.delete = OperationBuilder(apiBuilder).apply(block).build()
     }
 
+    /**
+     * Define a PATCH operation for this path.
+     */
     fun patch(block: OperationBuilder.() -> Unit) {
         pathItem.patch = OperationBuilder(apiBuilder).apply(block).build()
     }
@@ -127,15 +148,24 @@ class OperationBuilder(private val apiBuilder: OpenApiBuilder) {
         get() = operation.description
         set(value) { operation.description = value }
 
+    /**
+     * Add a tag to categorize this operation.
+     */
     fun tag(tag: String) {
         operation.addTagsItem(tag)
     }
 
+    /**
+     * Define a response for this operation with the given HTTP status code.
+     */
     fun response(status: String, block: ResponseBuilder.() -> Unit) {
         val response = ResponseBuilder(apiBuilder).apply(block).build()
         responses.addApiResponse(status, response)
     }
 
+    /**
+     * Define the request body for this operation.
+     */
     fun requestBody(block: RequestBodyBuilder.() -> Unit) {
         operation.requestBody = RequestBodyBuilder(apiBuilder).apply(block).build()
     }

@@ -12,6 +12,13 @@ import mu.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
 
+/**
+ * Main application verticle.
+ *
+ * Sets up the HTTP server with health check and API documentation endpoints.
+ * Configures routing for `/api/health`, `/openapi.json`, and `/swagger` endpoints
+ * with OpenTelemetry tracing enabled.
+ */
 class MainVerticle : AbstractVerticle() {
 
     override fun start(startPromise: Promise<Void>) {
