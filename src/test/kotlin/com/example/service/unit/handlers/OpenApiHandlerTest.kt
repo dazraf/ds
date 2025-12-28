@@ -1,31 +1,27 @@
 package com.example.service.unit.handlers
 
 import com.example.service.handlers.OpenApiHandler
-import io.mockk.MockKAnnotations
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.every
-import io.mockk.impl.annotations.MockK
+import io.mockk.mockk
 import io.mockk.verify
 import io.vertx.core.Future
 import io.vertx.core.http.HttpServerResponse
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 
-class OpenApiHandlerTest {
+class OpenApiHandlerTest : FunSpec({
 
-    @MockK
-    private lateinit var routingContext: RoutingContext
+    lateinit var routingContext: RoutingContext
+    lateinit var response: HttpServerResponse
+    lateinit var openApiHandler: OpenApiHandler
 
-    @MockK
-    private lateinit var response: HttpServerResponse
-
-    private lateinit var openApiHandler: OpenApiHandler
-
-    @BeforeEach
-    fun setup() {
-        MockKAnnotations.init(this)
+    beforeEach {
+        routingContext = mockk()
+        response = mockk()
         openApiHandler = OpenApiHandler()
 
         every { routingContext.response() } returns response
@@ -34,8 +30,7 @@ class OpenApiHandlerTest {
         every { response.end(any<String>()) } returns Future.succeededFuture()
     }
 
-    @Test
-    fun `should return 200 status code`() {
+    test("should return 200 status code") {
         // Act
         openApiHandler.handle(routingContext)
 
@@ -43,8 +38,7 @@ class OpenApiHandlerTest {
         verify { response.setStatusCode(200) }
     }
 
-    @Test
-    fun `should return application json content type`() {
+    test("should return application json content type") {
         // Act
         openApiHandler.handle(routingContext)
 
@@ -52,8 +46,7 @@ class OpenApiHandlerTest {
         verify { response.putHeader("Content-Type", "application/json") }
     }
 
-    @Test
-    fun `should return valid OpenAPI JSON`() {
+    test("should return valid OpenAPI JSON") {
         // Arrange
         var capturedJson: String? = null
         every { response.end(any<String>()) } answers {
@@ -65,17 +58,16 @@ class OpenApiHandlerTest {
         openApiHandler.handle(routingContext)
 
         // Assert
-        assertThat(capturedJson).isNotNull
+        capturedJson shouldNotBe null
         val json = JsonObject(capturedJson!!)
 
         // Verify OpenAPI 3.0 structure
-        assertThat(json.getString("openapi")).isEqualTo("3.0.3")
-        assertThat(json.getJsonObject("info")).isNotNull
-        assertThat(json.getJsonObject("paths")).isNotNull
+        json.getString("openapi") shouldBe "3.0.3"
+        json.getJsonObject("info") shouldNotBe null
+        json.getJsonObject("paths") shouldNotBe null
     }
 
-    @Test
-    fun `should contain health endpoint in paths`() {
+    test("should contain health endpoint in paths") {
         // Arrange
         var capturedJson: String? = null
         every { response.end(any<String>()) } answers {
@@ -89,11 +81,10 @@ class OpenApiHandlerTest {
         // Assert
         val json = JsonObject(capturedJson!!)
         val paths = json.getJsonObject("paths")
-        assertThat(paths.fieldNames()).contains("/api/health")
+        paths.fieldNames() shouldContain "/api/health"
     }
 
-    @Test
-    fun `should contain components section with schemas`() {
+    test("should contain components section with schemas") {
         // Arrange
         var capturedJson: String? = null
         every { response.end(any<String>()) } answers {
@@ -107,10 +98,10 @@ class OpenApiHandlerTest {
         // Assert
         val json = JsonObject(capturedJson!!)
         val components = json.getJsonObject("components")
-        assertThat(components).isNotNull
+        components shouldNotBe null
 
         val schemas = components.getJsonObject("schemas")
-        assertThat(schemas).isNotNull
-        assertThat(schemas.fieldNames()).contains("HealthStatus")
+        schemas shouldNotBe null
+        schemas.fieldNames() shouldContain "HealthStatus"
     }
-}
+})

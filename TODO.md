@@ -1,6 +1,6 @@
 # TODO - Code Compliance Tasks
 
-**Last Updated:** 2025-12-21
+**Last Updated:** 2025-12-28
 **Source:** Code compliance review against BEST_PRACTICES.md and ARCHITECTURE.md
 
 This file tracks code compliance violations and technical debt. Keep this updated as tasks are completed.
@@ -171,6 +171,79 @@ Per BEST_PRACTICES.md:70 - "Use KDoc for public APIs"
 
 ---
 
+## Medium Priority
+
+### Test Framework Migration
+
+- [x] **Migrate all tests from JUnit 5 to Kotest** ✅ COMPLETED
+  - **Rationale**: Kotest provides a more Kotlin-idiomatic testing framework with multiple spec styles
+  - **Scope**: Convert all unit and integration tests
+  - **Files affected**:
+    - All test files in `src/test/kotlin/com/example/service/unit/`
+    - All test files in `src/test/kotlin/com/example/service/integration/`
+  - **Tasks**:
+    - [x] Update `build.gradle.kts` to include Kotest dependencies ✅
+      - Added `kotest-runner-junit5`
+      - Added `kotest-assertions-core`
+      - Added `kotest-framework-api`
+      - Added `kotest-framework-engine`
+      - Added `kotest-extensions-testcontainers` (for integration tests)
+      - Kept AssertJ for assertions (compatible with Kotest)
+    - [x] Migrate unit tests to Kotest FunSpec style ✅
+      - `HealthHandlerTest.kt` ✅
+      - `OpenApiHandlerTest.kt` ✅
+      - `SwaggerUiHandlerTest.kt` ✅
+      - `MainVerticleTest.kt` ✅
+      - `OpenApiGeneratorTest.kt` ✅
+      - `ApiSpecificationTest.kt` ✅
+    - [x] Migrate integration tests to Kotest ✅
+      - `HealthApiIntegrationTest.kt` ✅
+      - `OpenApiIntegrationTest.kt` ✅
+    - [x] Update BEST_PRACTICES.md to reflect Kotest as the standard testing framework ✅
+    - [x] Verify all tests pass after migration ✅
+      - All 37 tests passing
+    - [x] Verify test coverage remains at current levels ✅
+      - Coverage report generated successfully
+  - **Results**:
+    - ✅ All tests successfully migrated to Kotest FunSpec
+    - ✅ All 37 tests passing (6 unit test files + 2 integration test files)
+    - ✅ MockK integration working seamlessly
+    - ✅ VertxTestContext used for async operations
+    - ✅ Kotest assertions used throughout (migrated from AssertJ)
+    - ✅ Documentation updated in BEST_PRACTICES.md
+
+### Assertion Library Migration
+
+- [x] **Migrate from AssertJ to Kotest assertions** ✅ COMPLETED
+  - **Rationale**: Use Kotest's native assertion library for more idiomatic Kotlin test syntax
+  - **Scope**: Replace all AssertJ assertions with Kotest matchers
+  - **Files affected**:
+    - All test files in `src/test/kotlin/com/example/service/unit/`
+    - All test files in `src/test/kotlin/com/example/service/integration/`
+  - **Tasks**:
+    - [x] Remove AssertJ dependency from `build.gradle.kts` ✅
+    - [x] Migrate unit test assertions (6 files) ✅
+      - `HealthHandlerTest.kt` ✅
+      - `OpenApiHandlerTest.kt` ✅
+      - `SwaggerUiHandlerTest.kt` ✅
+      - `MainVerticleTest.kt` ✅
+      - `OpenApiGeneratorTest.kt` ✅
+      - `ApiSpecificationTest.kt` ✅
+    - [x] Migrate integration test assertions (2 files) ✅
+      - `HealthApiIntegrationTest.kt` ✅
+      - `OpenApiIntegrationTest.kt` ✅
+    - [x] Update BEST_PRACTICES.md to document Kotest assertions ✅
+    - [x] Verify all tests pass after migration ✅
+      - All 37 tests passing
+  - **Results**:
+    - ✅ All test assertions migrated to Kotest matchers
+    - ✅ AssertJ dependency removed from build.gradle.kts
+    - ✅ All 37 tests passing (6 unit test files + 2 integration test files)
+    - ✅ Documentation updated in BEST_PRACTICES.md
+    - ✅ More idiomatic Kotlin test syntax using `shouldBe`, `shouldNotBe`, `shouldContain`, `shouldThrow`, etc.
+
+---
+
 ## Notes
 
 ### Fully Compliant Areas ✅
@@ -204,7 +277,8 @@ The following areas are in excellent compliance and should be maintained:
 
 **Critical Priority:** 8/9 complete (88.9%)
 **High Priority:** 0/5 complete (0%)
-**Overall:** 8/14 complete (57.1%)
+**Medium Priority:** 2/2 complete (100%) ✅
+**Overall:** 10/16 complete (62.5%)
 
 ---
 

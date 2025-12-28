@@ -13,8 +13,7 @@ repositories {
 
 val vertxVersion = "4.5.1"
 val logbackVersion = "1.4.14"
-val junitVersion = "5.10.1"
-val assertjVersion = "3.25.1"
+val kotestVersion = "5.8.0"
 val mockkVersion = "1.13.9"
 val testcontainersVersion = "1.19.3"
 val swaggerVersion = "2.2.20"
@@ -55,11 +54,12 @@ dependencies {
     implementation("io.swagger.core.v3:swagger-core-jakarta:$swaggerVersion")
     implementation("io.swagger.core.v3:swagger-models-jakarta:$swaggerVersion")
 
-    // Testing
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:$junitVersion")
-    testImplementation("org.assertj:assertj-core:$assertjVersion")
+    // Testing - Kotest
+    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+    testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
+    testImplementation("io.kotest:kotest-framework-api:$kotestVersion")
+    testImplementation("io.kotest:kotest-framework-engine:$kotestVersion")
+    testImplementation("io.kotest.extensions:kotest-extensions-testcontainers:2.0.2")
     testImplementation("io.mockk:mockk:$mockkVersion")
 
     // Vert.x testing
@@ -68,7 +68,6 @@ dependencies {
 
     // Testcontainers
     testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
-    testImplementation("org.testcontainers:junit-jupiter:$testcontainersVersion")
     testImplementation("org.testcontainers:postgresql:$testcontainersVersion")
 }
 

@@ -1,26 +1,27 @@
 package com.example.service.integration.api
 
 import com.example.service.MainVerticle
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.client.WebClient
-import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import java.util.concurrent.TimeUnit
 
-@ExtendWith(VertxExtension::class)
-class HealthApiIntegrationTest {
+class HealthApiIntegrationTest : FunSpec({
 
-    private lateinit var webClient: WebClient
-    private val testPort = 8888
+    lateinit var vertx: Vertx
+    lateinit var webClient: WebClient
+    val testPort = 8888
 
-    @BeforeEach
-    fun deployVerticle(vertx: Vertx, testContext: VertxTestContext) {
+    beforeEach {
+        val testContext = VertxTestContext()
+        vertx = Vertx.vertx()
         val config = JsonObject()
             .put("http.port", testPort)
             .put("http.host", "localhost")
@@ -31,53 +32,54 @@ class HealthApiIntegrationTest {
         ).onComplete(testContext.succeedingThenComplete())
 
         webClient = WebClient.create(vertx)
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @AfterEach
-    fun cleanup() {
+    afterEach {
         webClient.close()
+        val testContext = VertxTestContext()
+        vertx.close()
+            .onComplete(testContext.succeedingThenComplete())
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `GET health should return 200 with status OK`(
-        vertx: Vertx,
-        testContext: VertxTestContext
-    ) {
+    test("GET health should return 200 with status OK") {
+        val testContext = VertxTestContext()
+
         webClient.get(testPort, "localhost", "/api/health")
             .send()
             .onComplete(testContext.succeeding { response ->
                 testContext.verify {
-                    assertThat(response.statusCode()).isEqualTo(200)
-                    assertThat(response.getHeader("Content-Type"))
-                        .contains("application/json")
+                    response.statusCode() shouldBe 200
+                    response.getHeader("Content-Type") shouldContain "application/json"
 
                     val body = response.bodyAsJsonObject()
-                    assertThat(body.getString("status")).isEqualTo("OK")
+                    body.getString("status") shouldBe "OK"
 
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `GET health should return valid JSON structure`(
-        vertx: Vertx,
-        testContext: VertxTestContext
-    ) {
+    test("GET health should return valid JSON structure") {
+        val testContext = VertxTestContext()
+
         webClient.get(testPort, "localhost", "/api/health")
             .send()
             .onComplete(testContext.succeeding { response ->
                 testContext.verify {
                     val body = response.bodyAsJsonObject()
 
-                    assertThat(body.fieldNames())
-                        .containsExactly("status")
-                    assertThat(body.getString("status"))
-                        .isNotNull()
-                        .isEqualTo("OK")
+                    body.fieldNames().toList() shouldContainExactly listOf("status")
+                    body.getString("status") shouldNotBe null
+                    body.getString("status") shouldBe "OK"
 
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
-}
+})

@@ -1,30 +1,26 @@
 package com.example.service.unit.handlers
 
 import com.example.service.handlers.SwaggerUiHandler
-import io.mockk.MockKAnnotations
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldStartWith
+import io.kotest.matchers.shouldNotBe
 import io.mockk.every
-import io.mockk.impl.annotations.MockK
+import io.mockk.mockk
 import io.mockk.verify
 import io.vertx.core.Future
 import io.vertx.core.http.HttpServerResponse
 import io.vertx.ext.web.RoutingContext
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 
-class SwaggerUiHandlerTest {
+class SwaggerUiHandlerTest : FunSpec({
 
-    @MockK
-    private lateinit var routingContext: RoutingContext
+    lateinit var routingContext: RoutingContext
+    lateinit var response: HttpServerResponse
+    lateinit var swaggerUiHandler: SwaggerUiHandler
 
-    @MockK
-    private lateinit var response: HttpServerResponse
-
-    private lateinit var swaggerUiHandler: SwaggerUiHandler
-
-    @BeforeEach
-    fun setup() {
-        MockKAnnotations.init(this)
+    beforeEach {
+        routingContext = mockk()
+        response = mockk()
         swaggerUiHandler = SwaggerUiHandler()
 
         every { routingContext.response() } returns response
@@ -33,8 +29,7 @@ class SwaggerUiHandlerTest {
         every { response.end(any<String>()) } returns Future.succeededFuture()
     }
 
-    @Test
-    fun `should return 200 status code`() {
+    test("should return 200 status code") {
         // Act
         swaggerUiHandler.handle(routingContext)
 
@@ -42,8 +37,7 @@ class SwaggerUiHandlerTest {
         verify { response.setStatusCode(200) }
     }
 
-    @Test
-    fun `should return text html content type`() {
+    test("should return text html content type") {
         // Act
         swaggerUiHandler.handle(routingContext)
 
@@ -51,8 +45,7 @@ class SwaggerUiHandlerTest {
         verify { response.putHeader("Content-Type", "text/html; charset=utf-8") }
     }
 
-    @Test
-    fun `should return valid HTML`() {
+    test("should return valid HTML") {
         // Arrange
         var capturedHtml: String? = null
         every { response.end(any<String>()) } answers {
@@ -64,14 +57,13 @@ class SwaggerUiHandlerTest {
         swaggerUiHandler.handle(routingContext)
 
         // Assert
-        assertThat(capturedHtml).isNotNull
-        assertThat(capturedHtml).startsWith("<!DOCTYPE html>")
-        assertThat(capturedHtml).contains("<html lang=\"en\">")
-        assertThat(capturedHtml).contains("</html>")
+        capturedHtml shouldNotBe null
+        capturedHtml!! shouldStartWith "<!DOCTYPE html>"
+        capturedHtml shouldContain "<html lang=\"en\">"
+        capturedHtml shouldContain "</html>"
     }
 
-    @Test
-    fun `should contain Swagger UI title`() {
+    test("should contain Swagger UI title") {
         // Arrange
         var capturedHtml: String? = null
         every { response.end(any<String>()) } answers {
@@ -83,11 +75,10 @@ class SwaggerUiHandlerTest {
         swaggerUiHandler.handle(routingContext)
 
         // Assert
-        assertThat(capturedHtml).contains("<title>API Documentation - Swagger UI</title>")
+        capturedHtml shouldContain "<title>API Documentation - Swagger UI</title>"
     }
 
-    @Test
-    fun `should reference Swagger UI CSS`() {
+    test("should reference Swagger UI CSS") {
         // Arrange
         var capturedHtml: String? = null
         every { response.end(any<String>()) } answers {
@@ -99,12 +90,11 @@ class SwaggerUiHandlerTest {
         swaggerUiHandler.handle(routingContext)
 
         // Assert
-        assertThat(capturedHtml).contains("swagger-ui-dist")
-        assertThat(capturedHtml).contains("swagger-ui.css")
+        capturedHtml shouldContain "swagger-ui-dist"
+        capturedHtml shouldContain "swagger-ui.css"
     }
 
-    @Test
-    fun `should reference Swagger UI JavaScript`() {
+    test("should reference Swagger UI JavaScript") {
         // Arrange
         var capturedHtml: String? = null
         every { response.end(any<String>()) } answers {
@@ -116,12 +106,11 @@ class SwaggerUiHandlerTest {
         swaggerUiHandler.handle(routingContext)
 
         // Assert
-        assertThat(capturedHtml).contains("swagger-ui-bundle.js")
-        assertThat(capturedHtml).contains("swagger-ui-standalone-preset.js")
+        capturedHtml shouldContain "swagger-ui-bundle.js"
+        capturedHtml shouldContain "swagger-ui-standalone-preset.js"
     }
 
-    @Test
-    fun `should configure OpenAPI spec URL`() {
+    test("should configure OpenAPI spec URL") {
         // Arrange
         var capturedHtml: String? = null
         every { response.end(any<String>()) } answers {
@@ -133,11 +122,10 @@ class SwaggerUiHandlerTest {
         swaggerUiHandler.handle(routingContext)
 
         // Assert
-        assertThat(capturedHtml).contains("url: \"/openapi.json\"")
+        capturedHtml shouldContain "url: \"/openapi.json\""
     }
 
-    @Test
-    fun `should contain swagger-ui div element`() {
+    test("should contain swagger-ui div element") {
         // Arrange
         var capturedHtml: String? = null
         every { response.end(any<String>()) } answers {
@@ -149,6 +137,6 @@ class SwaggerUiHandlerTest {
         swaggerUiHandler.handle(routingContext)
 
         // Assert
-        assertThat(capturedHtml).contains("<div id=\"swagger-ui\"></div>")
+        capturedHtml shouldContain "<div id=\"swagger-ui\"></div>"
     }
-}
+})

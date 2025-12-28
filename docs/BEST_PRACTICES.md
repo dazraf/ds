@@ -52,8 +52,8 @@ This document outlines coding standards, conventions, and best practices for thi
 - **NO wildcard imports, ever**: Always use explicit imports
   - ❌ BAD: `import io.vertx.core.*`
   - ✅ GOOD: `import io.vertx.core.Vertx`
-  - ❌ BAD: `import org.assertj.core.api.Assertions.*`
-  - ✅ GOOD: `import org.assertj.core.api.Assertions.assertThat`
+  - ❌ BAD: `import io.kotest.matchers.*`
+  - ✅ GOOD: `import io.kotest.matchers.shouldBe`
 - Organize imports in this order:
   1. Standard library (`kotlin.*`, `java.*`)
   2. Third-party libraries
@@ -159,11 +159,11 @@ try {
 **Philosophy**: Comprehensive testing is non-negotiable. Every feature must have both unit tests and integration tests. Tests are not optional—they are part of the definition of "done."
 
 ### Test Framework & Tools
-- **Framework**: JUnit 5 (Jupiter)
-- **Assertions**: AssertJ for fluent, readable assertions
+- **Framework**: Kotest (Kotlin-native testing framework)
+- **Assertions**: Kotest assertions for idiomatic Kotlin test syntax
 - **Mocking**: MockK (Kotlin-specific mocking library)
 - **Integration Testing**: Testcontainers (for PostgreSQL and other dependencies)
-- **Vert.x Testing**: VertxExtension for async test support
+- **Vert.x Testing**: VertxTestContext for async test support (from vertx-junit5)
 
 ### Test Organization
 
@@ -206,21 +206,17 @@ try {
 
 **Example - Service Unit Test**:
 ```kotlin
-@ExtendWith(MockKExtension::class)
-class UserServiceTest {
+class UserServiceTest : FunSpec({
 
-    @MockK
-    private lateinit var userRepository: UserRepository
+    lateinit var userRepository: UserRepository
+    lateinit var userService: UserService
 
-    private lateinit var userService: UserService
-
-    @BeforeEach
-    fun setup() {
+    beforeEach {
+        userRepository = mockk()
         userService = UserService(userRepository)
     }
 
-    @Test
-    fun `should return user when found by id`() {
+    test("should return user when found by id") {
         // Arrange
         val userId = "123"
         val expectedUser = User(id = userId, email = "test@example.com")
@@ -230,45 +226,38 @@ class UserServiceTest {
         val result = userService.getUser(userId)
 
         // Assert
-        assertThat(result)
-            .isNotNull
-            .extracting("id", "email")
-            .containsExactly(userId, "test@example.com")
+        result.shouldNotBeNull()
+        result.id shouldBe userId
+        result.email shouldBe "test@example.com"
         verify(exactly = 1) { userRepository.findById(userId) }
     }
 
-    @Test
-    fun `should throw exception when user not found`() {
+    test("should throw exception when user not found") {
         // Arrange
         val userId = "nonexistent"
         every { userRepository.findById(userId) } returns null
 
         // Act & Assert
-        assertThatThrownBy { userService.getUser(userId) }
-            .isInstanceOf(UserNotFoundException::class.java)
-            .hasMessage("User not found: $userId")
+        shouldThrow<UserNotFoundException> {
+            userService.getUser(userId)
+        }.message shouldBe "User not found: $userId"
     }
-}
+})
 ```
 
 **Example - Handler Unit Test**:
 ```kotlin
-class UserHandlerTest {
+class UserHandlerTest : FunSpec({
 
-    @MockK
-    private lateinit var userService: UserService
+    lateinit var userService: UserService
+    lateinit var routingContext: RoutingContext
+    lateinit var response: HttpServerResponse
+    lateinit var userHandler: UserHandler
 
-    @MockK
-    private lateinit var routingContext: RoutingContext
-
-    @MockK
-    private lateinit var response: HttpServerResponse
-
-    private lateinit var userHandler: UserHandler
-
-    @BeforeEach
-    fun setup() {
-        MockKAnnotations.init(this)
+    beforeEach {
+        userService = mockk()
+        routingContext = mockk()
+        response = mockk()
         userHandler = UserHandler(userService)
         every { routingContext.response() } returns response
         every { response.putHeader(any(), any()) } returns response
@@ -276,8 +265,7 @@ class UserHandlerTest {
         every { response.end(any<String>()) } returns Future.succeededFuture()
     }
 
-    @Test
-    fun `should return user JSON when user exists`() {
+    test("should return user JSON when user exists") {
         // Arrange
         val userId = "123"
         val user = User(id = userId, email = "test@example.com")
@@ -292,7 +280,7 @@ class UserHandlerTest {
         verify { response.putHeader("Content-Type", "application/json") }
         verify { response.end(match { it.contains("test@example.com") }) }
     }
-}
+})
 ```
 
 ### Integration Tests
@@ -308,32 +296,37 @@ class UserHandlerTest {
 
 **Naming Convention**: `[ClassName]IntegrationTest.kt`
 
-**Test Annotations**:
-```kotlin
-@ExtendWith(VertxExtension::class)  // For async Vert.x testing
-@Testcontainers                      // For Testcontainers support
-```
+**Key Notes**:
+- Use Kotest's `FunSpec` (or other spec styles)
+- Create `VertxTestContext` instances manually within tests for async operations
+- Use `beforeEach`/`afterEach` for setup and teardown
 
 **Example - Database Integration Test**:
 ```kotlin
-@ExtendWith(VertxExtension::class)
-@Testcontainers
-class UserRepositoryIntegrationTest {
+class UserRepositoryIntegrationTest : FunSpec({
 
-    companion object {
-        @Container
-        val postgresContainer = PostgreSQLContainer<Nothing>("postgres:15-alpine").apply {
-            withDatabaseName("testdb")
-            withUsername("test")
-            withPassword("test")
-        }
+    val postgresContainer = PostgreSQLContainer<Nothing>("postgres:15-alpine").apply {
+        withDatabaseName("testdb")
+        withUsername("test")
+        withPassword("test")
     }
 
-    private lateinit var pgPool: PgPool
-    private lateinit var userRepository: UserRepository
+    lateinit var vertx: Vertx
+    lateinit var pgPool: PgPool
+    lateinit var userRepository: UserRepository
 
-    @BeforeEach
-    fun setup(vertx: Vertx, testContext: VertxTestContext) {
+    beforeSpec {
+        postgresContainer.start()
+    }
+
+    afterSpec {
+        postgresContainer.stop()
+    }
+
+    beforeEach {
+        val testContext = VertxTestContext()
+        vertx = Vertx.vertx()
+
         val connectOptions = PgConnectOptions()
             .setPort(postgresContainer.firstMappedPort)
             .setHost(postgresContainer.host)
@@ -347,19 +340,20 @@ class UserRepositoryIntegrationTest {
 
         // Run migrations or setup schema
         setupSchema(testContext)
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @AfterEach
-    fun tearDown(testContext: VertxTestContext) {
+    afterEach {
+        val testContext = VertxTestContext()
         pgPool.close()
             .onComplete(testContext.succeedingThenComplete())
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
+
+        vertx.close()
     }
 
-    @Test
-    fun `should save and retrieve user from database`(
-        vertx: Vertx,
-        testContext: VertxTestContext
-    ) {
+    test("should save and retrieve user from database") {
+        val testContext = VertxTestContext()
         val user = User(id = "123", email = "test@example.com", name = "Test User")
 
         userRepository.save(user)
@@ -373,13 +367,13 @@ class UserRepositoryIntegrationTest {
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `should return empty when user does not exist`(
-        vertx: Vertx,
-        testContext: VertxTestContext
-    ) {
+    test("should return empty when user does not exist") {
+        val testContext = VertxTestContext()
+
         userRepository.findById("nonexistent")
             .onComplete(testContext.succeeding { result ->
                 testContext.verify {
@@ -387,30 +381,37 @@ class UserRepositoryIntegrationTest {
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
-}
+})
 ```
 
 **Example - API Integration Test**:
 ```kotlin
-@ExtendWith(VertxExtension::class)
-@Testcontainers
-class UserApiIntegrationTest {
+class UserApiIntegrationTest : FunSpec({
 
-    companion object {
-        @Container
-        val postgresContainer = PostgreSQLContainer<Nothing>("postgres:15-alpine")
+    val postgresContainer = PostgreSQLContainer<Nothing>("postgres:15-alpine")
+    val testPort = 8888
 
-        private const val TEST_PORT = 8888
+    lateinit var vertx: Vertx
+    lateinit var webClient: WebClient
+
+    beforeSpec {
+        postgresContainer.start()
     }
 
-    private lateinit var webClient: WebClient
+    afterSpec {
+        postgresContainer.stop()
+    }
 
-    @BeforeEach
-    fun deployVerticle(vertx: Vertx, testContext: VertxTestContext) {
+    beforeEach {
+        val testContext = VertxTestContext()
+        vertx = Vertx.vertx()
+
         // Configure and deploy the main verticle
         val config = JsonObject()
-            .put("http.port", TEST_PORT)
+            .put("http.port", testPort)
             .put("db.host", postgresContainer.host)
             .put("db.port", postgresContainer.firstMappedPort)
             .put("db.database", postgresContainer.databaseName)
@@ -419,19 +420,26 @@ class UserApiIntegrationTest {
             .onComplete(testContext.succeedingThenComplete())
 
         webClient = WebClient.create(vertx)
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `GET user should return 200 with user JSON`(
-        vertx: Vertx,
-        testContext: VertxTestContext
-    ) {
+    afterEach {
+        webClient.close()
+        val testContext = VertxTestContext()
+        vertx.close()
+            .onComplete(testContext.succeedingThenComplete())
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
+    }
+
+    test("GET user should return 200 with user JSON") {
+        val testContext = VertxTestContext()
+
         // Arrange - create user in database first
         val userId = "test-user-123"
         createTestUser(userId, testContext)
 
         // Act
-        webClient.get(TEST_PORT, "localhost", "/api/users/$userId")
+        webClient.get(testPort, "localhost", "/api/users/$userId")
             .send()
             .onComplete(testContext.succeeding { response ->
                 testContext.verify {
@@ -447,14 +455,14 @@ class UserApiIntegrationTest {
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `GET user should return 404 when user not found`(
-        vertx: Vertx,
-        testContext: VertxTestContext
-    ) {
-        webClient.get(TEST_PORT, "localhost", "/api/users/nonexistent")
+    test("GET user should return 404 when user not found") {
+        val testContext = VertxTestContext()
+
+        webClient.get(testPort, "localhost", "/api/users/nonexistent")
             .send()
             .onComplete(testContext.succeeding { response ->
                 testContext.verify {
@@ -462,22 +470,33 @@ class UserApiIntegrationTest {
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
-}
+})
 ```
 
 ### Testing Async/Reactive Code (Vert.x)
 
-**Use VertxExtension**:
+**Use VertxTestContext with Kotest**:
 ```kotlin
-@ExtendWith(VertxExtension::class)
-class AsyncOperationTest {
+class AsyncOperationTest : FunSpec({
 
-    @Test
-    fun `should handle async operation`(
-        vertx: Vertx,
-        testContext: VertxTestContext
-    ) {
+    lateinit var vertx: Vertx
+
+    beforeEach {
+        vertx = Vertx.vertx()
+    }
+
+    afterEach {
+        val testContext = VertxTestContext()
+        vertx.close()
+            .onComplete(testContext.succeedingThenComplete())
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
+    }
+
+    test("should handle async operation") {
+        val testContext = VertxTestContext()
         val checkpoint = testContext.checkpoint()
 
         asyncOperation()
@@ -487,13 +506,12 @@ class AsyncOperationTest {
                     checkpoint.flag()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `should handle multiple async operations`(
-        vertx: Vertx,
-        testContext: VertxTestContext
-    ) {
+    test("should handle multiple async operations") {
+        val testContext = VertxTestContext()
         val checkpoint = testContext.checkpoint(2)  // Expect 2 completions
 
         asyncOperation1()
@@ -505,50 +523,62 @@ class AsyncOperationTest {
             .onComplete(testContext.succeeding {
                 checkpoint.flag()
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
-}
+})
 ```
 
-### AssertJ Assertions
+### Kotest Assertions
 
 ```kotlin
-// Use AssertJ's fluent API
-assertThat(user.email)
-    .isNotNull()
-    .isEqualTo("user@example.com")
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.shouldContain
+
+// Basic equality and null checks
+user.email shouldNotBe null
+user.email shouldBe "user@example.com"
 
 // Collections
-assertThat(users)
-    .hasSize(3)
-    .extracting("email")
-    .contains("user1@example.com", "user2@example.com")
+users shouldHaveSize 3
+users.map { it.email } shouldContain "user1@example.com"
+users.map { it.email } shouldContain "user2@example.com"
 
 // Exceptions
-assertThatThrownBy { service.processInvalidData() }
-    .isInstanceOf(ValidationException::class.java)
-    .hasMessageContaining("Invalid input")
+shouldThrow<ValidationException> {
+    service.processInvalidData()
+}.message shouldContain "Invalid input"
 
-// Optional/nullable values
-assertThat(optionalUser)
-    .isPresent
-    .get()
-    .extracting("email")
-    .isEqualTo("test@example.com")
+// Nullable values with smart casts
+optionalUser.shouldNotBeNull()
+optionalUser.email shouldBe "test@example.com"
+
+// String matchers
+message shouldContain "success"
+html shouldStartWith "<!DOCTYPE html>"
+
+// Numeric comparisons
+count shouldBe 5
+amount shouldBeGreaterThan 0
 ```
 
 ### Test Structure & Best Practices
 
 - **Follow AAA pattern**: Arrange, Act, Assert
-- **One logical assertion per test** (AssertJ chains are fine)
-- **Use descriptive test names** with backticks:
+- **One logical assertion per test** (Kotest matchers can be chained)
+- **Use descriptive test names** with Kotest's `test("...")` syntax:
   ```kotlin
-  @Test
-  fun `should return 404 when user not found`() { ... }
+  test("should return 404 when user not found") { ... }
   ```
 - **Use test fixtures** for common test data
-- **Clean up resources** in `@AfterEach` (close connections, delete test data)
+- **Clean up resources** in `afterEach` (close connections, delete test data)
 - **Avoid test interdependencies** - each test should be runnable in isolation
-- **Use `@Nested` classes** to group related tests
+- **Use `context("...")` blocks** to group related tests within a spec
+- **Spec Styles**: Kotest offers multiple styles - use `FunSpec` for simple, straightforward tests (similar to JUnit)
 
 ### What to Test
 

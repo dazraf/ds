@@ -1,57 +1,52 @@
 package com.example.service.unit
 
 import com.example.service.MainVerticle
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
-import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import java.util.concurrent.TimeUnit
 
-@ExtendWith(VertxExtension::class)
-class MainVerticleTest {
+class MainVerticleTest : FunSpec({
 
-    private lateinit var vertx: Vertx
+    lateinit var vertx: Vertx
 
-    @BeforeEach
-    fun setup(vertx: Vertx) {
-        this.vertx = vertx
+    beforeEach {
+        vertx = Vertx.vertx()
     }
 
-    @AfterEach
-    fun tearDown(testContext: VertxTestContext) {
+    afterEach {
+        val testContext = VertxTestContext()
         vertx.close()
             .onComplete(testContext.succeedingThenComplete())
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `should deploy verticle successfully`(vertx: Vertx, testContext: VertxTestContext) {
-        // Arrange
+    test("should deploy verticle successfully") {
+        val testContext = VertxTestContext()
         val config = JsonObject().put("http.port", 8081)
 
-        // Act & Assert
         vertx.deployVerticle(MainVerticle(), io.vertx.core.DeploymentOptions().setConfig(config))
             .onComplete(testContext.succeeding { deploymentId ->
                 testContext.verify {
-                    assertThat(deploymentId).isNotNull
+                    deploymentId shouldNotBe null
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `should start HTTP server on configured port`(vertx: Vertx, testContext: VertxTestContext) {
-        // Arrange
+    test("should start HTTP server on configured port") {
+        val testContext = VertxTestContext()
         val testPort = 8082
         val config = JsonObject().put("http.port", testPort)
 
-        // Act
         vertx.deployVerticle(MainVerticle(), io.vertx.core.DeploymentOptions().setConfig(config))
             .compose {
-                // Verify server is listening by making a request
                 vertx.createHttpClient()
                     .request(io.vertx.core.http.HttpMethod.GET, testPort, "localhost", "/api/health")
             }
@@ -60,21 +55,20 @@ class MainVerticleTest {
             }
             .onComplete(testContext.succeeding { response ->
                 testContext.verify {
-                    assertThat(response.statusCode()).isEqualTo(200)
+                    response.statusCode() shouldBe 200
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `should start server on specified port`(vertx: Vertx, testContext: VertxTestContext) {
-        // Arrange
+    test("should start server on specified port") {
+        val testContext = VertxTestContext()
         val config = JsonObject().put("http.port", 8086)
 
-        // Act
         vertx.deployVerticle(MainVerticle(), io.vertx.core.DeploymentOptions().setConfig(config))
             .compose {
-                // Verify server started successfully with configured port
                 vertx.createHttpClient()
                     .request(io.vertx.core.http.HttpMethod.GET, 8086, "localhost", "/api/health")
             }
@@ -83,18 +77,18 @@ class MainVerticleTest {
             }
             .onComplete(testContext.succeeding { response ->
                 testContext.verify {
-                    assertThat(response.statusCode()).isEqualTo(200)
+                    response.statusCode() shouldBe 200
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `should register health check endpoint`(vertx: Vertx, testContext: VertxTestContext) {
-        // Arrange
+    test("should register health check endpoint") {
+        val testContext = VertxTestContext()
         val config = JsonObject().put("http.port", 8083)
 
-        // Act
         vertx.deployVerticle(MainVerticle(), io.vertx.core.DeploymentOptions().setConfig(config))
             .compose {
                 vertx.createHttpClient()
@@ -105,19 +99,19 @@ class MainVerticleTest {
             }
             .onComplete(testContext.succeeding { response ->
                 testContext.verify {
-                    assertThat(response.statusCode()).isEqualTo(200)
-                    assertThat(response.getHeader("Content-Type")).contains("application/json")
+                    response.statusCode() shouldBe 200
+                    response.getHeader("Content-Type") shouldContain "application/json"
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `should register openapi json endpoint`(vertx: Vertx, testContext: VertxTestContext) {
-        // Arrange
+    test("should register openapi json endpoint") {
+        val testContext = VertxTestContext()
         val config = JsonObject().put("http.port", 8084)
 
-        // Act
         vertx.deployVerticle(MainVerticle(), io.vertx.core.DeploymentOptions().setConfig(config))
             .compose {
                 vertx.createHttpClient()
@@ -128,19 +122,19 @@ class MainVerticleTest {
             }
             .onComplete(testContext.succeeding { response ->
                 testContext.verify {
-                    assertThat(response.statusCode()).isEqualTo(200)
-                    assertThat(response.getHeader("Content-Type")).contains("application/json")
+                    response.statusCode() shouldBe 200
+                    response.getHeader("Content-Type") shouldContain "application/json"
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `should register swagger endpoint`(vertx: Vertx, testContext: VertxTestContext) {
-        // Arrange
+    test("should register swagger endpoint") {
+        val testContext = VertxTestContext()
         val config = JsonObject().put("http.port", 8085)
 
-        // Act
         vertx.deployVerticle(MainVerticle(), io.vertx.core.DeploymentOptions().setConfig(config))
             .compose {
                 vertx.createHttpClient()
@@ -151,10 +145,12 @@ class MainVerticleTest {
             }
             .onComplete(testContext.succeeding { response ->
                 testContext.verify {
-                    assertThat(response.statusCode()).isEqualTo(200)
-                    assertThat(response.getHeader("Content-Type")).contains("text/html")
+                    response.statusCode() shouldBe 200
+                    response.getHeader("Content-Type") shouldContain "text/html"
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
-}
+})

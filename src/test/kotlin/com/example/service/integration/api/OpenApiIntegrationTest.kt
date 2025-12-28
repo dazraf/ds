@@ -1,58 +1,65 @@
 package com.example.service.integration.api
 
 import com.example.service.MainVerticle
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.client.WebClient
-import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
+import java.util.concurrent.TimeUnit
 
-@ExtendWith(VertxExtension::class)
-class OpenApiIntegrationTest {
+class OpenApiIntegrationTest : FunSpec({
 
-    private lateinit var webClient: WebClient
-    private val testPort = 9090
+    lateinit var vertx: Vertx
+    lateinit var webClient: WebClient
+    val testPort = 9090
 
-    @BeforeEach
-    fun deployVerticle(vertx: Vertx, testContext: VertxTestContext) {
+    beforeEach {
+        val testContext = VertxTestContext()
+        vertx = Vertx.vertx()
         val config = JsonObject().put("http.port", testPort)
 
         vertx.deployVerticle(MainVerticle(), io.vertx.core.DeploymentOptions().setConfig(config))
             .onComplete(testContext.succeedingThenComplete())
 
         webClient = WebClient.create(vertx)
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @AfterEach
-    fun tearDown(vertx: Vertx, testContext: VertxTestContext) {
+    afterEach {
+        webClient.close()
+        val testContext = VertxTestContext()
         vertx.close()
             .onComplete(testContext.succeedingThenComplete())
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `GET openapi json should return 200 with valid JSON`(vertx: Vertx, testContext: VertxTestContext) {
+    test("GET openapi json should return 200 with valid JSON") {
+        val testContext = VertxTestContext()
+
         webClient.get(testPort, "localhost", "/openapi.json")
             .send()
             .onComplete(testContext.succeeding { response ->
                 testContext.verify {
-                    assertThat(response.statusCode()).isEqualTo(200)
-                    assertThat(response.getHeader("Content-Type")).contains("application/json")
+                    response.statusCode() shouldBe 200
+                    response.getHeader("Content-Type") shouldContain "application/json"
 
                     val body = response.bodyAsJsonObject()
-                    assertThat(body).isNotNull
+                    body shouldNotBe null
 
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `OpenAPI spec should be valid OpenAPI 3_0 specification`(vertx: Vertx, testContext: VertxTestContext) {
+    test("OpenAPI spec should be valid OpenAPI 3_0 specification") {
+        val testContext = VertxTestContext()
+
         webClient.get(testPort, "localhost", "/openapi.json")
             .send()
             .onComplete(testContext.succeeding { response ->
@@ -60,19 +67,22 @@ class OpenApiIntegrationTest {
                     val body = response.bodyAsJsonObject()
 
                     // Verify OpenAPI version
-                    assertThat(body.getString("openapi")).isEqualTo("3.0.3")
+                    body.getString("openapi") shouldBe "3.0.3"
 
                     // Verify required sections exist
-                    assertThat(body.getJsonObject("info")).isNotNull
-                    assertThat(body.getJsonObject("paths")).isNotNull
+                    body.getJsonObject("info") shouldNotBe null
+                    body.getJsonObject("paths") shouldNotBe null
 
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `OpenAPI spec should contain health endpoint documentation`(vertx: Vertx, testContext: VertxTestContext) {
+    test("OpenAPI spec should contain health endpoint documentation") {
+        val testContext = VertxTestContext()
+
         webClient.get(testPort, "localhost", "/openapi.json")
             .send()
             .onComplete(testContext.succeeding { response ->
@@ -81,18 +91,21 @@ class OpenApiIntegrationTest {
                     val paths = body.getJsonObject("paths")
 
                     // Verify /api/health endpoint is documented
-                    assertThat(paths.containsKey("/api/health")).isTrue()
+                    paths.containsKey("/api/health") shouldBe true
 
                     val healthPath = paths.getJsonObject("/api/health")
-                    assertThat(healthPath.containsKey("get")).isTrue()
+                    healthPath.containsKey("get") shouldBe true
 
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `OpenAPI spec should contain components with HealthStatus schema`(vertx: Vertx, testContext: VertxTestContext) {
+    test("OpenAPI spec should contain components with HealthStatus schema") {
+        val testContext = VertxTestContext()
+
         webClient.get(testPort, "localhost", "/openapi.json")
             .send()
             .onComplete(testContext.succeeding { response ->
@@ -100,19 +113,22 @@ class OpenApiIntegrationTest {
                     val body = response.bodyAsJsonObject()
                     val components = body.getJsonObject("components")
 
-                    assertThat(components).isNotNull
+                    components shouldNotBe null
 
                     val schemas = components.getJsonObject("schemas")
-                    assertThat(schemas).isNotNull
-                    assertThat(schemas.containsKey("HealthStatus")).isTrue()
+                    schemas shouldNotBe null
+                    schemas.containsKey("HealthStatus") shouldBe true
 
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `OpenAPI spec should use schema references not inline definitions`(vertx: Vertx, testContext: VertxTestContext) {
+    test("OpenAPI spec should use schema references not inline definitions") {
+        val testContext = VertxTestContext()
+
         webClient.get(testPort, "localhost", "/openapi.json")
             .send()
             .onComplete(testContext.succeeding { response ->
@@ -128,47 +144,56 @@ class OpenApiIntegrationTest {
                     val schema = jsonContent.getJsonObject("schema")
 
                     // Verify schema uses $ref
-                    assertThat(schema.getString("\$ref")).isEqualTo("#/components/schemas/HealthStatus")
+                    schema.getString("\$ref") shouldBe "#/components/schemas/HealthStatus"
 
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `GET swagger should return 200 with HTML page`(vertx: Vertx, testContext: VertxTestContext) {
+    test("GET swagger should return 200 with HTML page") {
+        val testContext = VertxTestContext()
+
         webClient.get(testPort, "localhost", "/swagger")
             .send()
             .onComplete(testContext.succeeding { response ->
                 testContext.verify {
-                    assertThat(response.statusCode()).isEqualTo(200)
-                    assertThat(response.getHeader("Content-Type")).contains("text/html")
+                    response.statusCode() shouldBe 200
+                    response.getHeader("Content-Type") shouldContain "text/html"
 
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `Swagger UI page should contain Swagger UI elements`(vertx: Vertx, testContext: VertxTestContext) {
+    test("Swagger UI page should contain Swagger UI elements") {
+        val testContext = VertxTestContext()
+
         webClient.get(testPort, "localhost", "/swagger")
             .send()
             .onComplete(testContext.succeeding { response ->
                 testContext.verify {
                     val html = response.bodyAsString()
 
-                    assertThat(html).contains("<!DOCTYPE html>")
-                    assertThat(html).contains("API Documentation - Swagger UI")
-                    assertThat(html).contains("swagger-ui")
-                    assertThat(html).contains("swagger-ui-bundle.js")
+                    html shouldContain "<!DOCTYPE html>"
+                    html shouldContain "API Documentation - Swagger UI"
+                    html shouldContain "swagger-ui"
+                    html shouldContain "swagger-ui-bundle.js"
 
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
 
-    @Test
-    fun `Swagger UI should be configured to load openapi json`(vertx: Vertx, testContext: VertxTestContext) {
+    test("Swagger UI should be configured to load openapi json") {
+        val testContext = VertxTestContext()
+
         webClient.get(testPort, "localhost", "/swagger")
             .send()
             .onComplete(testContext.succeeding { response ->
@@ -176,10 +201,12 @@ class OpenApiIntegrationTest {
                     val html = response.bodyAsString()
 
                     // Verify Swagger UI is configured to load from /openapi.json
-                    assertThat(html).contains("url: \"/openapi.json\"")
+                    html shouldContain "url: \"/openapi.json\""
 
                     testContext.completeNow()
                 }
             })
+
+        testContext.awaitCompletion(5, TimeUnit.SECONDS)
     }
-}
+})

@@ -1,31 +1,26 @@
 package com.example.service.unit.handlers
 
 import com.example.service.handlers.HealthHandler
-import io.mockk.MockKAnnotations
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.every
-import io.mockk.impl.annotations.MockK
+import io.mockk.mockk
 import io.mockk.verify
 import io.vertx.core.Future
 import io.vertx.core.http.HttpServerResponse
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.RoutingContext
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 
-class HealthHandlerTest {
+class HealthHandlerTest : FunSpec({
 
-    @MockK
-    private lateinit var routingContext: RoutingContext
+    lateinit var routingContext: RoutingContext
+    lateinit var response: HttpServerResponse
+    lateinit var healthHandler: HealthHandler
 
-    @MockK
-    private lateinit var response: HttpServerResponse
-
-    private lateinit var healthHandler: HealthHandler
-
-    @BeforeEach
-    fun setup() {
-        MockKAnnotations.init(this)
+    beforeEach {
+        routingContext = mockk()
+        response = mockk()
         healthHandler = HealthHandler()
 
         every { routingContext.response() } returns response
@@ -34,8 +29,7 @@ class HealthHandlerTest {
         every { response.end(any<String>()) } returns Future.succeededFuture()
     }
 
-    @Test
-    fun `should return 200 with status OK`() {
+    test("should return 200 with status OK") {
         // Act
         healthHandler.handle(routingContext)
 
@@ -50,8 +44,7 @@ class HealthHandlerTest {
         }
     }
 
-    @Test
-    fun `should return JSON with correct structure`() {
+    test("should return JSON with correct structure") {
         // Arrange
         var capturedJson: String? = null
         every { response.end(any<String>()) } answers {
@@ -63,9 +56,9 @@ class HealthHandlerTest {
         healthHandler.handle(routingContext)
 
         // Assert
-        assertThat(capturedJson).isNotNull
+        capturedJson shouldNotBe null
         val json = JsonObject(capturedJson!!)
-        assertThat(json.getString("status")).isEqualTo("OK")
-        assertThat(json.fieldNames()).containsExactly("status")
+        json.getString("status") shouldBe "OK"
+        json.fieldNames().toList() shouldBe listOf("status")
     }
-}
+})

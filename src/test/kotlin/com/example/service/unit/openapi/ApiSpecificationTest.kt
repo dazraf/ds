@@ -1,60 +1,59 @@
 package com.example.service.unit.openapi
 
 import com.example.service.openapi.ApiSpecification
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.maps.shouldContainKey
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 
-class ApiSpecificationTest {
+class ApiSpecificationTest : FunSpec({
 
-    @Test
-    fun `should have HealthStatus schema in components`() {
+    test("should have HealthStatus schema in components") {
         val spec = ApiSpecification.spec
 
         // Verify components section exists
-        assertThat(spec.components).isNotNull
+        spec.components shouldNotBe null
 
         // Verify HealthStatus schema is defined in components
         val schemas = spec.components?.schemas
-        assertThat(schemas)
-            .isNotNull
-            .containsKey("HealthStatus")
+        schemas shouldNotBe null
+        schemas!! shouldContainKey "HealthStatus"
 
         // Verify HealthStatus schema has correct structure
-        val healthStatusSchema = schemas?.get("HealthStatus")
-        assertThat(healthStatusSchema).isNotNull
-        assertThat(healthStatusSchema?.type).isEqualTo("object")
-        assertThat(healthStatusSchema?.properties).containsKey("status")
+        val healthStatusSchema = schemas["HealthStatus"]
+        healthStatusSchema shouldNotBe null
+        healthStatusSchema?.type shouldBe "object"
+        healthStatusSchema?.properties!! shouldContainKey "status"
     }
 
-    @Test
-    fun `should use schema reference for health endpoint 200 response`() {
+    test("should use schema reference for health endpoint 200 response") {
         val spec = ApiSpecification.spec
 
         // Get the health endpoint
         val healthPath = spec.paths?.get("/api/health")
-        assertThat(healthPath).isNotNull
+        healthPath shouldNotBe null
 
         // Get the GET operation
         val getOperation = healthPath?.get
-        assertThat(getOperation).isNotNull
+        getOperation shouldNotBe null
 
         // Get the 200 response
         val response200 = getOperation?.responses?.get("200")
-        assertThat(response200).isNotNull
+        response200 shouldNotBe null
 
         // Get the JSON content schema
         val jsonContent = response200?.content?.get("application/json")
-        assertThat(jsonContent).isNotNull
+        jsonContent shouldNotBe null
 
         val schema = jsonContent?.schema
-        assertThat(schema).isNotNull
+        schema shouldNotBe null
 
         // Verify it's a reference to HealthStatus
-        assertThat(schema?.`$ref`).isEqualTo("#/components/schemas/HealthStatus")
+        schema?.`$ref` shouldBe "#/components/schemas/HealthStatus"
     }
 
-    @Test
-    fun `should use schema reference for health endpoint 503 response`() {
+    test("should use schema reference for health endpoint 503 response") {
         val spec = ApiSpecification.spec
 
         val response503 = spec.paths
@@ -63,23 +62,22 @@ class ApiSpecificationTest {
             ?.responses
             ?.get("503")
 
-        assertThat(response503).isNotNull
+        response503 shouldNotBe null
 
         val schema = response503?.content?.get("application/json")?.schema
-        assertThat(schema?.`$ref`).isEqualTo("#/components/schemas/HealthStatus")
+        schema?.`$ref` shouldBe "#/components/schemas/HealthStatus"
     }
 
-    @Test
-    fun `generated JSON should contain components and references`() {
+    test("generated JSON should contain components and references") {
         val json = ApiSpecification.toJson()
 
         // Verify the JSON contains the components section
-        assertThat(json).contains("\"components\"")
-        assertThat(json).contains("\"schemas\"")
-        assertThat(json).contains("\"HealthStatus\"")
+        json shouldContain "\"components\""
+        json shouldContain "\"schemas\""
+        json shouldContain "\"HealthStatus\""
 
         // Verify the JSON contains references
-        assertThat(json).contains("\"${'$'}ref\"")
-        assertThat(json).contains("#/components/schemas/HealthStatus")
+        json shouldContain "\"${'$'}ref\""
+        json shouldContain "#/components/schemas/HealthStatus"
     }
-}
+})
