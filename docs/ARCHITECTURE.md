@@ -1,6 +1,6 @@
 # Architecture & Stack
 
-**Last Updated:** 2025-12-21
+**Last Updated:** 2025-12-28
 
 This document describes the service architecture, design patterns, and technology stack for this project. Update this document as the architecture evolves.
 
@@ -45,8 +45,10 @@ This document describes the service architecture, design patterns, and technolog
 
 ### Testing
 
-- **Test Framework**: JUnit 5
-- **Assertions**: AssertJ (fluent assertion library)
+- **Test Framework**: Kotest (Kotlin test framework with FunSpec style)
+- **Assertions**: Kotest matchers (fluent assertion library)
+- **Mocking**: MockK (Kotlin-specific mocking library)
+- **Async Testing**: Vert.x JUnit 5 integration (VertxTestContext)
 
 ### API Documentation
 
@@ -119,8 +121,59 @@ The service exposes the following standard endpoints:
 
 ### Architectural Patterns
 
-- **[Pattern Name]**: [When and why we use it]
-- **[Pattern Name]**: [When and why we use it]
+- **Reactive Event-Driven**: Leverages Vert.x's event loop for non-blocking, asynchronous operations
+- **Verticle-Based Components**: Application functionality is organized into Vert.x verticles that can be independently deployed and scaled
+- **Bootstrap Separation Pattern**: Application initialization is separated from the entry point for improved testability (see ApplicationBootstrapper)
+
+### Application Initialization Pattern
+
+The application uses the **ApplicationBootstrapper** pattern to separate initialization logic from the main entry point, improving testability and maintainability.
+
+**Components**:
+- **`Main.kt`**: Thin entry point that reads configuration from system properties and delegates to ApplicationBootstrapper
+- **`ApplicationBootstrapper.kt`**: Testable class containing initialization logic for:
+  - OpenTelemetry configuration and Vert.x instance creation with tracing enabled
+  - MainVerticle deployment with success/failure handling
+  - Resource cleanup on deployment failures
+
+**Benefits**:
+- **Testability**: Initialization logic can be unit tested without invoking the JVM entry point
+- **Separation of Concerns**: Entry point (orchestration) is separated from initialization logic (business logic)
+- **Error Handling**: Deployment failures and cleanup paths are testable in isolation
+- **Maintainability**: Changes to initialization logic don't require modifying the entry point
+
+**Example**:
+```kotlin
+// Main.kt - Simple orchestration
+fun main() {
+    val serviceName = System.getProperty("otel.service.name", "ds-service")
+    val otlpEndpoint = System.getProperty("otel.exporter.otlp.endpoint", "http://localhost:4317")
+
+    val bootstrapper = ApplicationBootstrapper()
+    val vertx = bootstrapper.createVertxWithTracing(serviceName, otlpEndpoint)
+
+    bootstrapper.deployMainVerticle(vertx, onSuccess, onFailure)
+}
+
+// ApplicationBootstrapper.kt - Testable initialization
+class ApplicationBootstrapper {
+    fun createVertxWithTracing(serviceName: String, otlpEndpoint: String): Vertx {
+        val openTelemetry = OpenTelemetryConfig.initialize(serviceName, otlpEndpoint)
+        val vertxOptions = VertxOptions()
+            .setTracingOptions(OpenTelemetryOptions(openTelemetry))
+        return Vertx.vertx(vertxOptions)
+    }
+
+    fun deployMainVerticle(vertx: Vertx, onSuccess: (String) -> Unit, onFailure: (Throwable) -> Unit) {
+        vertx.deployVerticle(MainVerticle())
+            .onSuccess(onSuccess)
+            .onFailure { error ->
+                onFailure(error)
+                vertx.close()  // Cleanup on failure
+            }
+    }
+}
+```
 
 ### Code Organization
 
@@ -129,24 +182,34 @@ The service exposes the following standard endpoints:
   /main
     /kotlin
       /[package]
-        /verticles     # Vert.x verticles (application components)
+        Main.kt                      # Application entry point
+        ApplicationBootstrapper.kt   # Initialization logic (testable)
+        MainVerticle.kt              # Main application verticle
         /handlers      # HTTP request handlers
         /services      # Business logic layer
         /repositories  # Data access layer
         /models        # Domain models and data classes
         /openapi       # OpenAPI specification (Kotlin DSL)
+          ApiSpecification.kt         # OpenAPI spec definition
+          OpenApiGenerator.kt         # JSON generation
           /dsl         # OpenAPI DSL builders
         /config        # Configuration classes
+          OpenTelemetryConfig.kt      # OTel initialization
         /extensions    # Kotlin extension functions
         /utils         # Shared utilities
     /resources
       /logback.xml     # Logback configuration
-      /application.conf # Application configuration
   /test
     /kotlin
       /[package]
         /unit          # Unit tests
+          ApplicationBootstrapperTest.kt
+          MainVerticleTest.kt
+          /handlers    # Handler unit tests
+          /openapi     # OpenAPI DSL tests
+          /config      # Configuration tests
         /integration   # Integration tests
+          /api         # API integration tests
     /resources
       /test-config     # Test configurations
 /build.gradle.kts      # Gradle build configuration
@@ -156,10 +219,25 @@ The service exposes the following standard endpoints:
 
 ### Common Patterns
 
-- **Dependency Injection**: [How we handle DI]
-- **Error Handling**: [Centralized error handling approach]
-- **Validation**: [Input validation strategy]
-- **Authentication/Authorization**: [How we handle auth]
+- **Dependency Injection**: No DI framework used. Dependencies are explicitly created and passed through constructors or method parameters, following 12-factor app principles. Configuration comes from system properties with sensible defaults.
+
+- **Configuration Management**:
+  - System properties for runtime configuration (`System.getProperty()`)
+  - Verticle config for component-specific settings (`config().getInteger()`)
+  - Singleton objects for shared configuration (e.g., `OpenTelemetryConfig`)
+
+- **Error Handling**:
+  - Async error handling via Vert.x futures (`.onSuccess()`, `.onFailure()`)
+  - Structured logging with KotlinLogging for error context
+  - Automatic resource cleanup on failures (e.g., `vertx.close()` on deployment failure)
+
+- **Validation**: Request/response validation via OpenAPI schema definitions
+
+- **Testing Strategy**:
+  - **Unit Tests**: Mock external dependencies (Vert.x components, HTTP context) using MockK
+  - **Integration Tests**: Use VertxTestContext for async testing with real Vert.x instances
+  - **Coverage Goal**: 80% overall, 90%+ for business logic
+  - **Test Framework**: Kotest FunSpec style for readable, expressive tests
 
 ## Data Flow
 
