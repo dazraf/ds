@@ -1,9 +1,5 @@
 package com.example.service
 
-import com.example.service.config.OpenTelemetryConfig
-import io.vertx.core.Vertx
-import io.vertx.core.VertxOptions
-import io.vertx.tracing.opentelemetry.OpenTelemetryOptions
 import mu.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
@@ -23,22 +19,16 @@ fun main() {
     logger.info { "Service name: $serviceName" }
     logger.info { "OTLP endpoint: $otlpEndpoint" }
 
-    // Initialize OpenTelemetry
-    val openTelemetry = OpenTelemetryConfig.initialize(serviceName, otlpEndpoint)
+    val bootstrapper = ApplicationBootstrapper()
+    val vertx = bootstrapper.createVertxWithTracing(serviceName, otlpEndpoint)
 
-    // Create Vertx with OpenTelemetry tracing
-    val vertxOptions = VertxOptions()
-        .setTracingOptions(OpenTelemetryOptions(openTelemetry))
-
-    val vertx = Vertx.vertx(vertxOptions)
-
-    // Deploy the main verticle
-    vertx.deployVerticle(MainVerticle())
-        .onSuccess { deploymentId ->
+    bootstrapper.deployMainVerticle(
+        vertx,
+        onSuccess = { deploymentId ->
             logger.info { "MainVerticle deployed successfully: $deploymentId" }
-        }
-        .onFailure { error ->
+        },
+        onFailure = { error ->
             logger.error(error) { "Failed to deploy MainVerticle" }
-            vertx.close()
         }
+    )
 }
