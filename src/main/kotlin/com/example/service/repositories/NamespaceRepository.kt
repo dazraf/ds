@@ -194,6 +194,16 @@ class NamespaceRepository(
 
         logger.warn { "Namespace permanently deleted: $name (database dropped)" }
     }
+
+    /**
+     * Gets a connection pool for a namespace database.
+     *
+     * @param name The namespace name
+     * @return Connection pool for the namespace database
+     */
+    fun getPool(name: String): Pool {
+        return databaseManager.getNamespaceConnection(name)
+    }
 }
 
 class NamespaceAlreadyExistsException(message: String) : Exception(message)

@@ -54,6 +54,9 @@ replay_pid*
 # Logs
 logs/
 
+# File Uploads
+uploads/
+
 # Dependency Directories
 node_modules/
 vendor/

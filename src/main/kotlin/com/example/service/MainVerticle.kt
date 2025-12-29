@@ -3,6 +3,7 @@ package com.example.service
 import com.example.service.database.DatabaseConfig
 import com.example.service.database.DatabaseManager
 import com.example.service.database.LiquibaseRunner
+import com.example.service.handlers.DataHandler
 import com.example.service.handlers.HealthHandler
 import com.example.service.handlers.NamespaceHandler
 import com.example.service.handlers.OpenApiHandler
@@ -86,8 +87,8 @@ class MainVerticle : CoroutineVerticle() {
     private fun createRouter(): Router {
         val router = Router.router(vertx)
 
-        // Enable body parsing for POST/PUT requests
-        router.route().handler(BodyHandler.create())
+        // Enable body parsing for POST/PUT requests (with file upload support)
+        router.route().handler(BodyHandler.create().setUploadsDirectory("uploads"))
 
         // Health check endpoint
         val healthHandler = HealthHandler()
@@ -123,7 +124,71 @@ class MainVerticle : CoroutineVerticle() {
             }
         }
 
-        logger.info { "Registered routes: health, openapi, swagger, namespace CRUD" }
+        // Data management endpoints
+        val dataHandler = DataHandler(namespaceRepository)
+
+        // Upload data
+        router.post("/api/v1/namespaces/:namespace/branches/:branch/data/:dataType/:name").handler { ctx ->
+            launch(vertx.dispatcher()) {
+                dataHandler.upload(ctx)
+            }
+        }
+
+        // Download data
+        router.get("/api/v1/namespaces/:namespace/branches/:branch/data/:dataType/:name").handler { ctx ->
+            launch(vertx.dispatcher()) {
+                dataHandler.download(ctx)
+            }
+        }
+
+        // Get metadata
+        router.get("/api/v1/namespaces/:namespace/branches/:branch/data/:dataType/:name/metadata").handler { ctx ->
+            launch(vertx.dispatcher()) {
+                dataHandler.getMetadata(ctx)
+            }
+        }
+
+        // Get history
+        router.get("/api/v1/namespaces/:namespace/branches/:branch/data/:dataType/:name/history").handler { ctx ->
+            launch(vertx.dispatcher()) {
+                dataHandler.getHistory(ctx)
+            }
+        }
+
+        // List entries by type
+        router.get("/api/v1/namespaces/:namespace/branches/:branch/data/:dataType").handler { ctx ->
+            launch(vertx.dispatcher()) {
+                dataHandler.list(ctx)
+            }
+        }
+
+        // Delete entry
+        router.delete("/api/v1/namespaces/:namespace/branches/:branch/data/:dataType/:name").handler { ctx ->
+            launch(vertx.dispatcher()) {
+                dataHandler.delete(ctx)
+            }
+        }
+
+        // Tag management
+        router.post("/api/v1/namespaces/:namespace/branches/:branch/data/:dataType/:name/tags").handler { ctx ->
+            launch(vertx.dispatcher()) {
+                dataHandler.addTags(ctx)
+            }
+        }
+
+        router.get("/api/v1/namespaces/:namespace/branches/:branch/data/:dataType/:name/tags").handler { ctx ->
+            launch(vertx.dispatcher()) {
+                dataHandler.getTags(ctx)
+            }
+        }
+
+        router.delete("/api/v1/namespaces/:namespace/branches/:branch/data/:dataType/:name/tags/:tag").handler { ctx ->
+            launch(vertx.dispatcher()) {
+                dataHandler.deleteTag(ctx)
+            }
+        }
+
+        logger.info { "Registered routes: health, openapi, swagger, namespace CRUD, data CRUD, tags" }
 
         return router
     }
