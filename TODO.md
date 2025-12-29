@@ -111,7 +111,7 @@ Per BEST_PRACTICES.md:159 - "Every feature must have both unit tests and integra
     - OpenAPI spec should use schema references not inline definitions ✅
     - GET /swagger should return 200 with HTML page ✅
     - Swagger UI page should contain Swagger UI elements ✅
-    - Swagger UI should be configured to load openapi json ✅
+    - Swagger UI should be configured to load OpenAPI JSON ✅
   - Coverage: 8/8 tests passing
 
 ### API Documentation (Critical Priority)

@@ -1,9 +1,12 @@
 package com.example.service
 
 import com.example.service.config.OpenTelemetryConfig
+import io.vertx.core.DeploymentOptions
 import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
+import io.vertx.core.json.JsonObject
 import io.vertx.tracing.opentelemetry.OpenTelemetryOptions
+import java.io.File
 
 /**
  * Handles application bootstrapping including OpenTelemetry initialization
@@ -29,6 +32,20 @@ class ApplicationBootstrapper {
     }
 
     /**
+     * Loads the application configuration from application.conf.
+     *
+     * @return JsonObject containing the application configuration
+     */
+    fun loadConfig(): JsonObject {
+        val configFile = File("src/main/resources/application.conf")
+        if (!configFile.exists()) {
+            throw IllegalStateException("Configuration file not found: ${configFile.absolutePath}")
+        }
+        val configText = configFile.readText()
+        return JsonObject(configText)
+    }
+
+    /**
      * Deploys the main verticle with success and failure callbacks.
      *
      * On deployment failure, automatically closes the Vert.x instance
@@ -43,7 +60,10 @@ class ApplicationBootstrapper {
         onSuccess: (String) -> Unit,
         onFailure: (Throwable) -> Unit
     ) {
-        vertx.deployVerticle(MainVerticle())
+        val config = loadConfig()
+        val options = DeploymentOptions().setConfig(config)
+
+        vertx.deployVerticle(MainVerticle(), options)
             .onSuccess(onSuccess)
             .onFailure { error ->
                 onFailure(error)

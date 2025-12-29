@@ -17,6 +17,7 @@ val kotestVersion = "5.8.0"
 val mockkVersion = "1.13.9"
 val testcontainersVersion = "1.19.3"
 val swaggerVersion = "2.2.20"
+val liquibaseVersion = "4.25.0"
 
 dependencies {
     // Vert.x core
@@ -27,6 +28,11 @@ dependencies {
 
     // Vert.x PostgreSQL client
     implementation("io.vertx:vertx-pg-client:$vertxVersion")
+
+    // Liquibase for database migrations
+    implementation("org.liquibase:liquibase-core:$liquibaseVersion")
+    implementation("org.postgresql:postgresql:42.7.1")
+    implementation("com.ongres.scram:client:2.1")
 
     // Vert.x config
     implementation("io.vertx:vertx-config:$vertxVersion")

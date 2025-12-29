@@ -57,6 +57,7 @@ docker-compose up -d    # Start PostgreSQL, OTel Collector, Jaeger
 - 4-space indentation
 - 120 character line limit
 - Kotlin official style guide
+- Do not leave unused imports or variables
 
 ### API Documentation
 - All API endpoints defined in `src/main/kotlin/com/example/service/openapi/ApiSpecification.kt`

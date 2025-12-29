@@ -22,7 +22,7 @@ This document outlines coding standards, conventions, and best practices for thi
 - Avoid over-engineering
 - Write code that solves the current problem
 - Don't add features or abstractions until they're needed
-- Prefer straightforward solutions over clever ones
+- Prefer straightforward solutions to clever ones
 
 ### Code Quality
 - Write self-documenting code with clear variable and function names
@@ -67,7 +67,7 @@ This document outlines coding standards, conventions, and best practices for thi
 - Write comments that explain "why", not "what"
 - Avoid obvious comments
 - Update comments when code changes
-- Use KDoc for public APIs (similar to JavaDoc)
+- Use KDoc for public APIs (similar to Javadoc)
 - Use TODO comments with tickets: `// TODO(TICKET-123): Description`
 
 ### Kotlin-Specific Conventions

@@ -276,17 +276,13 @@ fun <T : Any> generateFullSchema(type: KClass<T>): Schema<*> {
     val typeName = type.simpleName ?: "object"
     val mainSchema = schemas[typeName]
 
-    return if (mainSchema != null) {
-        // Swagger Core generates the schema correctly, just ensure type is set
-        mainSchema.apply {
-            // Force the type to be "object" for data classes
-            this.type = "object"
-        }
-    } else {
-        Schema<Any>().apply {
-            this.type = "object"
-            this.name = typeName
-        }
+    // Swagger Core generates the schema correctly, just ensure type is set
+    return mainSchema?.apply {
+        // Force the type to be "object" for data classes
+        this.type = "object"
+    } ?: Schema<Any>().apply {
+        this.type = "object"
+        this.name = typeName
     }
 }
 

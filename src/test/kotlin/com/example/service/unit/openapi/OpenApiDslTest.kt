@@ -4,7 +4,6 @@ import com.example.service.models.HealthStatus
 import com.example.service.openapi.dsl.InfoBuilder
 import com.example.service.openapi.dsl.OpenApiBuilder
 import com.example.service.openapi.dsl.OperationBuilder
-import com.example.service.openapi.dsl.PathBuilder
 import com.example.service.openapi.dsl.RequestBodyBuilder
 import com.example.service.openapi.dsl.ResponseBuilder
 import com.example.service.openapi.dsl.generateFullSchema

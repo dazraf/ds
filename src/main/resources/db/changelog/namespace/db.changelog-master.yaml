@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/namespace/changesets/001-create-branches-table.sql
+  - include:
+      file: db/changelog/namespace/changesets/002-create-data-entries-table.sql
+  - include:
+      file: db/changelog/namespace/changesets/003-create-tags-table.sql
+  - include:
+      file: db/changelog/namespace/changesets/004-create-indexes.sql
+  - include:
+      file: db/changelog/namespace/changesets/005-insert-default-main-branch.sql

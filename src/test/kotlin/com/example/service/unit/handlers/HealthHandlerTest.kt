@@ -34,7 +34,7 @@ class HealthHandlerTest : FunSpec({
         healthHandler.handle(routingContext)
 
         // Assert
-        verify { response.setStatusCode(200) }
+        verify { response.statusCode = 200 }
         verify { response.putHeader("Content-Type", "application/json") }
         verify {
             response.end(match<String> { jsonString ->

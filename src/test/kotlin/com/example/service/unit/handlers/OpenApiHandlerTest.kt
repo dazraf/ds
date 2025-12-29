@@ -35,7 +35,7 @@ class OpenApiHandlerTest : FunSpec({
         openApiHandler.handle(routingContext)
 
         // Assert
-        verify { response.setStatusCode(200) }
+        verify { response.statusCode = 200 }
     }
 
     test("should return application json content type") {

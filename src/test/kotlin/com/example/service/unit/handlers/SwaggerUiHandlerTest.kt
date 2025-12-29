@@ -34,7 +34,7 @@ class SwaggerUiHandlerTest : FunSpec({
         swaggerUiHandler.handle(routingContext)
 
         // Assert
-        verify { response.setStatusCode(200) }
+        verify { response.statusCode = 200 }
     }
 
     test("should return text html content type") {

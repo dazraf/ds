@@ -51,27 +51,27 @@ Once the stack is running, access the following services:
 
 ### Application Endpoints
 
-| Service | URL | Description |
-|---------|-----|-------------|
-| **API Base** | http://localhost:8080 | Main application server |
-| **Health Check** | http://localhost:8080/api/health | Service health status |
-| **Swagger UI** | http://localhost:8080/swagger | Interactive API documentation |
+| Service          | URL                                | Description                      |
+|------------------|------------------------------------|----------------------------------|
+| **API Base**     | http://localhost:8080              | Main application server          |
+| **Health Check** | http://localhost:8080/api/health   | Service health status            |
+| **Swagger UI**   | http://localhost:8080/swagger      | Interactive API documentation    |
 | **OpenAPI Spec** | http://localhost:8080/openapi.json | OpenAPI 3.0 specification (JSON) |
 
 ### Infrastructure Services
 
-| Service | URL | Description |
-|---------|-----|-------------|
-| **PostgreSQL** | `localhost:5432` | Database (user: `postgres`, password: `postgres`, database: `appdb`) |
-| **Jaeger UI** | http://localhost:16686 | Distributed tracing visualization |
-| **OTel Collector** | `localhost:4317` | OpenTelemetry OTLP gRPC endpoint |
+| Service            | URL                    | Description                                                          |
+|--------------------|------------------------|----------------------------------------------------------------------|
+| **PostgreSQL**     | `localhost:5432`       | Database (user: `postgres`, password: `postgres`, database: `appdb`) |
+| **Jaeger UI**      | http://localhost:16686 | Distributed tracing visualization                                    |
+| **OTel Collector** | `localhost:4317`       | OpenTelemetry OTLP gRPC endpoint                                     |
 
 ### Development Tools
 
-| Tool | Location | Description |
-|------|----------|-------------|
+| Tool                       | Location                                    | Description                                                            |
+|----------------------------|---------------------------------------------|------------------------------------------------------------------------|
 | **JaCoCo Coverage Report** | `build/reports/jacoco/test/html/index.html` | Test coverage report (after running `./gradlew test jacocoTestReport`) |
-| **Test Reports** | `build/reports/tests/test/index.html` | Test execution report (after running `./gradlew test`) |
+| **Test Reports**           | `build/reports/tests/test/index.html`       | Test execution report (after running `./gradlew test`)                 |
 
 ### Stopping the Stack
 
