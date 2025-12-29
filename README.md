@@ -26,13 +26,36 @@ See [docs/BEST_PRACTICES.md](docs/BEST_PRACTICES.md) for:
 
 ## Quick Start
 
-### Start the Complete Local Stack
+### Automated Setup (Recommended)
+
+Use the provided helper scripts for the easiest setup:
+
+```bash
+# Start everything (Docker services + registry DB setup + application)
+./start.sh
+
+# In another terminal, run the test suite to try out the API
+./test.sh
+
+# Stop everything (preserves data)
+./stop.sh
+
+# Stop and remove all data
+./stop.sh --clean
+```
+
+### Manual Setup
+
+If you prefer to start services manually:
 
 ```bash
 # 1. Start infrastructure (PostgreSQL, OTel Collector, Jaeger)
 docker-compose up -d
 
-# 2. Run the application
+# 2. Create registry database (first time only)
+docker exec -it ds-postgres psql -U postgres -c "CREATE DATABASE ds_registry;"
+
+# 3. Run the application
 ./gradlew run
 ```
 
